@@ -1,0 +1,94 @@
+#LEVEL DATA GENERATOR
+#   this is just a basic python3 script for generating level reward entries (json encoding)
+#   to run it ensure you have python3 installed on your system then just double-click this file
+#   you should see the output appear in the same directory you ran this script in. if you
+#   do not, try the following: 
+#       -refresh your explorer window
+#       -run the script with admin permissions (script requires write perms to output file)
+#       -ensure your python3 is updated
+#
+#author: Alex Pazder
+#contact: TheCryptoTrader69@gmail.com
+
+import json 
+#data settings
+#   max level to generate
+levelMax = 60
+#   rewards per level:
+#   [itemID, itemCount, iterationType, iterationValue, iterationOffset, iterationMinLevel, iterationMaxLevel]
+#       itemID are define item (as per the inventory-data object ID)
+#       itemCount is number of items to give
+#       iterationType and iterationValue define how entries will be generated
+#           iterationType [single, repeating]
+#       ex: iterationType=0, iterationValue=10, generates 1 entry at level 10 
+#       ex: iterationType=1, iterationValue=10, generates 1 entry every 10 levels
+#       iterationOffset is applied to the current level before any calculation is done
+#       ex: iterationType=1, iterationValue=10, iterationOffset=2, generates 1 entry every 10 levels with offset of +2
+#           this would be level 12, 22, 32...
+#       iterationMinLevel and iterationMaxLevel defines the range that rewards will spawn in (send -1 to ignore range clamp)
+generationSettings = [
+    #resources
+        #give fuel x 250, repeating for every level
+        ["fuel", 250, 1, 1, 0, -1, -1],
+        #give coins x 100, repeating for every 5 levels, skip first level
+        ["coins", 100, 1, 5, 0, 1, -1],
+        #give propulsion x 2, repeating for every 5 levels, after level 15 (skip level 20)
+        ["propulsion", 2, 0, 15, 0, -1, -1],
+        ["propulsion", 2, 1, 5, 0, 25, -1],
+        #give cannister every 15 levels, starting at level 25
+        ["cannisters", 5, 1, 15, 10, 25, -1],
+        ["cannisters", 5, 0, 50, 0, -1, -1],#and once at level 50
+        #give antimatter at level 20, 35, 55
+        ["antimatter", 5, 0, 20, 0, -1, -1],
+        ["antimatter", 5, 0, 35, 0, -1, -1],
+        ["antimatter", 5, 0, 55, 0, -1, -1],
+    #cargo
+        #give small cargo, once at level 10 
+        ["smCargo", 1, 0, 10, 0, -1, -1],
+        #give medium cargo, once at level 15
+        ["mdCargo", 1, 0, 15, 0, -1, -1],
+        #give large cargo, repeating for every 5 levels, starting at level 25 
+        ["lgCargo", 1, 1, 5, 0, 20, -1],
+    #claim tokens
+        #give claim token T1, once level 30
+        ["token0", 1, 1, 30, 0, 1, -1],
+        #give claim token T2, once level 45
+        ["token1", 1, 1, 45, 0, 1, -1],
+        #give claim token T3, once level 60
+        ["token2", 1, 1, 60, 0, 1, -1]
+    ]
+#generate dictionary
+levelDataRaw = {}
+#process every level
+for x in range(levelMax):
+    #process each reward setting
+    levelRewards = []
+    for y in range(len(generationSettings)):
+        #check if current level is a target
+        if (x % generationSettings[y][3]) == generationSettings[y][4]:
+            #ensure current level is above min level
+            if generationSettings[y][5] != -1 and x < generationSettings[y][5]:
+                continue
+            #ensure current level is below max level
+            if generationSettings[y][6] != -1 and x > generationSettings[y][6]:
+                continue
+            #only process if repeating or (not repeating and first time)  
+            if generationSettings[y][2] == 1 or (generationSettings[y][2] == 0 and generationSettings[y][3] == x+generationSettings[y][4]):
+                #add rewards to list of levels
+                levelRewards.append([generationSettings[y][0],generationSettings[y][1]])
+    #add entry level data
+    levelDataRaw[x] = levelRewards
+
+#json serialization
+levelDataJson = json.dumps(levelDataRaw, separators=(",", ":"), indent=0)
+#formatting
+#   remove all new lines
+levelDataJson = levelDataJson.replace("\n", "")
+#   seperate each level element by a new line
+levelDataJson = levelDataJson.replace(",\"", ",\n\t\"").replace("{", "{\n\t").replace("}", "\n}")
+#   seperate each reward element by a new line
+levelDataJson = levelDataJson.replace("]]", "]\n\t]").replace("[[", "\n\t[\n\t\t[").replace("],[", "],\n\t\t[")
+ 
+#json output to file location
+with open("level-data.json", "w") as outfile:
+    outfile.write(levelDataJson)
