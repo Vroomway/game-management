@@ -1,3 +1,15 @@
+# Game Management
+
+<img src="images/game-management.png" width="200">
+
+This scene outlines the general usage of the inventory and leveling systems used in Vroomway's racing game.
+
+The inventory manager manages inventories with multiple different types of items, along with callbacks that can populated to auto update your displays.
+
+The leveling manager keeps track of a player's experience, level, and prestige. It also includes leveling rewards (gain resources/permissions as you level).
+
+There is no server code atm, but anyone using the system should be able to easily find where to put their server interactions.
+
 # SDK7 Test scene
 
 This scene is built with the SDK7 in alpha state.
@@ -5,6 +17,7 @@ This scene is built with the SDK7 in alpha state.
 # New ECS for SDK7
 
 ## Entities
+
 An Entity is just an ID. It is an abstract concept not represented by any data structure. There is no "class Entity". Just a number that is used as a reference to group different components.
 
 ```ts
@@ -34,9 +47,6 @@ This is different from how the syntax was in SDK6:
 myEntity.addComponent(Transform)
 ```
 
-
-
-
 ### Base Components
 
 Base components already come packed as part of the SDK. Most of them interact directly with the renderer in some way. This is the full list of currently supported base components:
@@ -64,7 +74,6 @@ Base components already come packed as part of the SDK. Most of them interact di
 - TextShape
 - VisibilityComponent
 
-
 ```ts
 const entity = engine.addEntity()
 Transfrom.create(entity, {
@@ -80,7 +89,6 @@ GltfContainer.create(zombie, {
 })
 ```
 
-
 ### Custom Components
 
 Each component must have a unique number ID. If a number is repeated, the engine or another player receiving updates might apply changes to the wrong component. Note that numbers 1-2000 are reserved for the base components.
@@ -88,7 +96,9 @@ Each component must have a unique number ID. If a number is repeated, the engine
 When creating a custom component you declare the schema of the data to be stored in it. Every field in a component MUST belong to one of the built-in special schemas provided as part of the SDK. These special schemas include extra functionality that allows them to be serialized/deserialized.
 
 Currently, the names of these special schemas are:
+
 #### Primitives
+
 1. `Schemas.Boolean`: true or false (serialized as a Byte)
 2. `Schemas.String`: UTF8 strings (serialized length and content)
 3. `Schemas.Float`: single precission float
@@ -100,6 +110,7 @@ Currently, the names of these special schemas are:
 9. `Schemas.Number`: an alias to Schemas.Float
 
 #### Specials
+
 10. `Schemas.Entity`: a wrapper to int32 that casts the type to `Entity`
 11. `Schemas.Vector3`: a Vector3 with { x, y, z }
 12. `Schemas.Quaternion`: a Quaternion with { x, y, z, w}
@@ -107,6 +118,7 @@ Currently, the names of these special schemas are:
 14. `Schemas.Color4`: a Colo4 with { r, g, b, a }
 
 #### Schema generator
+
 15. `Schemas.Enum`: passing the serialization Schema and the original Enum as generic
 16. `Schemas.Array`: passing the item Schema
 17. `Schemas.Map`: passing a Map with Schemas as values
@@ -119,16 +131,14 @@ const object = Schemas.Map({ x: Schemas.Int }) // { x: 1 }
 
 const array = Schemas.Map(Schemas.Int) // [1,2,3,4]
 
-const objectArray = Schemas.Array(
-  Schemas.Map({ x: Schemas.Int })
-) // [{ x: 1 }, { x: 2 }]
+const objectArray = Schemas.Array(Schemas.Map({ x: Schemas.Int })) // [{ x: 1 }, { x: 2 }]
 
 const BasicSchemas = Schemas.Map({
   x: Schemas.Int,
   y: Schemas.Float,
   text: Schemas.String,
   flag: Schemas.Boolean
-  }) // { x: 1, y: 1.412, text: 'ecs 7 text', flag: true }
+}) // { x: 1, y: 1.412, text: 'ecs 7 text', flag: true }
 
 const VelocitySchema = Schemas.Map({
   x: Schemas.Float,
@@ -143,8 +153,6 @@ To then create a custom component using one of these schemas, use the following 
 export const myCustomComponent = engine.defineComponent(MyDataSchema, ComponentID)
 ```
 
-
-
 For contrast, below is an example of how components were constructed prior to SDK 7.
 
 ```ts
@@ -153,7 +161,7 @@ For contrast, below is an example of how components were constructed prior to SD
  */
 
 // Define Component
-@Component("velocity")
+@Component('velocity')
 export class Velocity extends Vector3 {
   constructor(x: number, y: number, z: number) {
     super(x, y, z)
@@ -186,8 +194,6 @@ VelocityComponent.create(entity, { x: 1, y: 2.3, z: 8 })
 VelocityComponent.deleteFrom(entity)
 ```
 
-
-
 ## Systems
 
 Systems are pure & simple functions.
@@ -199,25 +205,23 @@ To add a system, all you need to do is define a function and add it to the engin
 ```ts
 // Basic system
 function mySystem() {
-  console.log("my system is running")
+  console.log('my system is running')
 }
 
 engine.addSystem(mySystem)
 
 // System with dt
 function mySystemDT(dt: number) {
-  console.log("time since last frame:  ", dt)
- }
+  console.log('time since last frame:  ', dt)
+}
 
 engine.addSystem(mySystemDT)
 ```
-
 
 ### Query components
 
 The way to group/query the components inside systems is using the method getEntitiesWith.
 `engine.getEntitiesWith(...components)`.
-
 
 ```ts
 function physicsSystem(dt: number) {
